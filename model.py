@@ -313,4 +313,8 @@ def main():
 
 
 if __name__ == '__main__':
+    """
+    parameters to main:
+    -train -create-f2v data/files data/train_labels_filtered.csv f2v.file -save first.model
+    """
     main()
