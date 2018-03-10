@@ -5,7 +5,6 @@ from os.path import isfile, join
 import capstone
 import pefile
 
-
 UNK = '_UNK_'
 
 BYTES_END = 'bytes'
@@ -59,7 +58,12 @@ def produce_data_file_on_segments(dirpath, dll_filename):
     :param dirpath: path to directory where the file is in.
     :param dll_filename: name of dll file.
     """
-    pe = pefile.PE('%s/%s.%s' % (dirpath, dll_filename, DLL_END))
+    try:
+        pe = pefile.PE('%s/%s.%s' % (dirpath, dll_filename, DLL_END))
+    except Exception as e:
+        print 'Error with pefile on file: %s' % dll_filename
+        print e.message
+        exit(0)
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
 
     with open('%s/%s.%s' % (dirpath, dll_filename, DLL_END), 'w') as f:

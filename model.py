@@ -57,6 +57,10 @@ def create_file_file2vec(dirpath, files_list, f2v_name):
     :param f2v_name: output file, will contain file-name and the vector that represents it.
         Format of file: filename<\t>vec
     """
+    # TODO change the format of each vector only in the f2v.file
+    #      for each vector, for ngrams save only the indexes and for segments as regular
+    #      when reading the f2v.file and the model needs to train parse it to a regular vector by starting
+    #      with zeroes and then modify the vector according to the indexes
     with open(f2v_name, 'w') as f:
         for f_name in files_list:
             vec = represent_file_as_vector(dirpath, f_name)  # represent each file as a vector
