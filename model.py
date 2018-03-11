@@ -3,6 +3,7 @@ from csv import DictReader
 from time import time
 import sys
 
+import numpy as np
 import xgboost as xgb
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
@@ -86,6 +87,8 @@ def get_data_and_labels(f2l_filepath, f2v_filepath):
 
             matrix.append(vec)
             labels.append(f2l_dict[filename])
+    # TODO:#### I have changed it to np
+    matrix, labels = np.array(matrix), np.array(labels)
     return matrix, labels
 
 
@@ -128,7 +131,8 @@ class CodeModel(object):
         :return: list of labels, the ith-label is connected to the ith-vector in matrix.
         """
         preds = self.model.predict(matrix)
-        return [round(val) for val in preds]
+        # return [round(val) for val in preds]
+        return preds
 
     def predict_and_accuracy_on(self, matrix, labels, show_confusion_matrix=False):
         """
@@ -146,22 +150,16 @@ class CodeModel(object):
         if show_confusion_matrix:
             print confusion_matrix(labels, preds)
 
-    def train_on(self, train_tup, dev_tup, model_name=None, show_confusion_matrix=False):
+    def train_on(self, train_tup, model_name=None):
         """
         Fit the model on the train-set and check its performance on dev-set, can save the model after training.
         :param train_tup: tuple of (train-matrix, labels) .
-        :param dev_tup: same format as train_tup.
         :param model_name: string if needed to save the model,
             the saved model will be in file named by this string, None as default for not saving the model.
-        :param show_confusion_matrix: boolean, determine if to show to the user confusion matrix.
         """
         # fit model to training data
         train_matrix, labels = train_tup
         self.model.fit(train_matrix, labels, eval_metric='mlogloss')
-
-        # check performance of model on dev-set
-        dev_matrix, labels = dev_tup
-        self.predict_and_accuracy_on(dev_matrix, labels, show_confusion_matrix)
 
         # save model if needed
         if model_name:
@@ -217,8 +215,9 @@ def train_model(args):
 
         create_file_file2vec(dirpath, file_list, f2v_filepath)
     else:  # f2v file exists already
-        f2l_filepath = args[0]
-        f2v_filepath = args[1]
+        # TODO: note that before it was 0,1 but '-train' is also part of args
+        f2l_filepath = args[1]
+        f2v_filepath = args[2]
 
     # extract parameters from main
     model_name = None
@@ -228,8 +227,7 @@ def train_model(args):
 
     # load data
     matrix, labels = get_data_and_labels(f2l_filepath, f2v_filepath)
-    train, dev, y_train, y_dev = train_test_split(matrix, labels, test_size=0.33, random_state=42)
-    dev, test, y_dev, y_test = train_test_split(dev, y_dev, test_size=0.33, random_state=43)
+    train, test, y_train, y_test = train_test_split(matrix, labels, test_size=0.33, random_state=42)
 
     # apply model
     if LOAD_MODEL in args:
@@ -237,7 +235,7 @@ def train_model(args):
         model = CodeModel.load_from(given_model_file)
     else:
         model = CodeModel()
-    model.train_on((train, y_train), (dev, y_dev), model_name, show_conf_matrix)
+    model.train_on((train, y_train), model_name)
     model.predict_and_accuracy_on(test, y_test, show_conf_matrix)
 
 

@@ -66,14 +66,15 @@ def produce_data_file_on_segments(dirpath, dll_filename):
         exit(0)
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
 
-    with open('%s/%s.%s' % (dirpath, dll_filename, DLL_END), 'w') as f:
+    with open('%s/%s.%s' % (dirpath, dll_filename, SEGMENT_END), 'w') as f:
         for section in pe.sections:
             code = section.get_data()
             first_instruction_address = section.PointerToRawData
-            num_lines_in_section = len(md.disasm(code, first_instruction_address))
-
+            num_lines_in_section = 0
+            for i in md.disasm(code, first_instruction_address):
+                num_lines_in_section += 1
             # for each section write in the file the name and number of lines in that section
-            f.write('%s:%i\n' % (section.Name, num_lines_in_section))
+            f.write('%s:%i\n' % (section.Name.strip('\0'), num_lines_in_section))
 
 
 def count_seg_counts(dirpath, f_name, seg_set):
