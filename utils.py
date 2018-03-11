@@ -1,8 +1,10 @@
+import random
 from collections import Counter
 from csv import DictReader
 from os import listdir
 from os.path import isfile, join
 import capstone
+import numpy as np
 import pefile
 
 UNK = '_UNK_'
@@ -125,3 +127,39 @@ def get_f2l_dict(filepath):
         label = row['Class']
         f2l_dict[filename] = label
     return f2l_dict
+
+
+def train_test_split(X, y, test_size=0.33):
+    """
+    :param X: data set, array-like.
+    :param y: array of labels, the ith-label connected to X[i].
+    :param test_size: size of test-set, number between 0 to 1.
+    :return: tuple of train-set, test-set, labels of train, labels of test.
+    """
+    labels_counter = Counter(y)
+    train, test, y_train, y_test = [], [], [], []
+    for label in labels_counter:
+        num_samples = labels_counter[label]
+
+        if num_samples == 1:  # only one sample of that label, add it to train
+            i = y.index(label)
+            train.append(X[i])
+            y_train.append(label)
+            continue
+
+        # separate the indexes into train and test
+        num_test_samples = int(num_samples * test_size) + 1
+        samples_indexes = [i for i, other_label in enumerate(y) if label == other_label]
+        samples_indexes = random.shuffle(samples_indexes)
+        test_samples_indexes = samples_indexes[:num_test_samples]
+        train_samples_indexes = samples_indexes[num_test_samples + 1:]
+
+        # add to each list the needed samples from X and the connected label
+        for test_sample_i in test_samples_indexes:
+            test.append(X[test_sample_i])
+            y_test.append(label)
+        for train_sample_i in train_samples_indexes:
+            train.append(X[train_sample_i])
+            y_train.append(label)
+
+    return np.array(train), np.array(test), np.array(y_train), np.array(y_test)

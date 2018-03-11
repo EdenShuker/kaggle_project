@@ -88,7 +88,7 @@ def get_data_and_labels(f2l_filepath, f2v_filepath):
             matrix.append(vec)
             labels.append(f2l_dict[filename])
     # TODO:#### I have changed it to np
-    matrix, labels = np.array(matrix), np.array(labels)
+    # matrix, labels = np.array(matrix), np.array(labels)
     return matrix, labels
 
 
@@ -227,7 +227,8 @@ def train_model(args):
 
     # load data
     matrix, labels = get_data_and_labels(f2l_filepath, f2v_filepath)
-    train, test, y_train, y_test = train_test_split(matrix, labels, test_size=0.33, random_state=42)
+    # train, test, y_train, y_test = train_test_split(matrix, labels, test_size=0.33, random_state=42)
+    train, test, y_train, y_test = utils.train_test_split(matrix, labels, test_size=0.33)
 
     # apply model
     if LOAD_MODEL in args:
@@ -318,5 +319,6 @@ if __name__ == '__main__':
     """
     parameters to main:
     -train -create-f2v data/files data/train_labels_filtered.csv f2v.file -save first.model
+    -train data/train_labels_filtered.csv f2v.file -save first.model -show-matrix
     """
     main()
