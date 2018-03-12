@@ -64,9 +64,9 @@ def main():
                          will be in format of 'filename<tab>vector<EOL>'
     """
     args = sys.argv[1:]
-    dirpath = args[1]
-    files_filepath = args[2]
-    f2v_filepath = args[3]
+    dirpath = args[0]
+    files_filepath = args[1]
+    f2v_filepath = args[2]
 
     # extract names of files
     file_list = []
@@ -75,6 +75,7 @@ def main():
         file_list.append(row['Id'])
 
     create_file_file2vec(dirpath, file_list, f2v_filepath)
+    print 'done created %s' % f2v_filepath
 
 
 if __name__ == '__main__':

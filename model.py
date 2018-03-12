@@ -14,6 +14,7 @@ CREATE_F2V_FILE = '-create-f2v'
 SAVE_MODEL = '-save'
 SHOW_CONFUSION_MAT = '-show-matrix'
 TRAIN = '-train'
+TEST = '-test'
 LOAD_MODEL = '-load'
 OUTPUT_FILE_FLAG = '-out-file'
 
@@ -148,20 +149,21 @@ class CodeModel(object):
         if show_confusion_matrix:
             print confusion_matrix(labels, preds)
 
-    def train_on(self, train_tup, model_name=None):
+    def train_on(self, train_matrix, labels, model_name=None):
         """
         Fit the model on the train-set and check its performance on dev-set, can save the model after training.
-        :param train_tup: tuple of (train-matrix, labels) .
+        :param train_matrix: data set.
+        :param labels: list of labels, ith-label is connected to the ith-item in matrix.
         :param model_name: string if needed to save the model,
             the saved model will be in file named by this string, None as default for not saving the model.
         """
         # fit model to training data
-        train_matrix, labels = train_tup
         self.model.fit(train_matrix, labels, eval_metric='mlogloss')
 
         # save model if needed
         if model_name:
             self.save_model(model_name)
+            print 'saved model'
 
     def save_model(self, filename):
         """ save the current model in a file, can be loaded from that file later. """
@@ -174,145 +176,65 @@ class CodeModel(object):
         return model
 
 
-def train_model(args):
+def main():
     """
-    train a model on data, can retrain a model by loading one.
-    :param args: arguments from main.
-        options:
-        # add '-create-f2v' to main if it is the first time to encounter the data,
-                that will create a file of the given data that maps file-name to the vector representing it.
-                if passed, you must pass the following arguments in the next order right after that flag:
-                    dirpath f2l_filepath f2v_filepath
-                explanation on each is right below.
-
-                if not passed, then pass parameters as following:
-                    f2l_filepath f2v_filepath
-        # dirpath - path to directory where the files are in.
-                    need to pass it only if used '-create-f2v' flag.
-        # f2l_filepath - path to .csv file, each line in it is 'filename,label'.
-                         must pass it.
-        # f2v_filepath - path to f2v file. must pass it.
-                         if you create it, so this parameter will be the name of the f2v file that
-                          the program will produce.
-        # add '-save' in case you want to save the model after training.
-            if you pass it, you must pass right after it the name of the file that the model will be saved to.
-        # add '-load' to load an existing model.
-            if you pass it, you must pass right after the name of the model file to load.
+    parameters to main (can play with the options):
+    [-load model_name]
+    [-train train_csv_file f2v_file]
+    [-save new_model_name]
+    [-test test_csv_file f2v_file output_file]
     """
-    if CREATE_F2V_FILE in args:  # in case of first time to process the data
-        i = args.index(CREATE_F2V_FILE)
-        dirpath = args[i + 1]  # path to directory where the files are in
-        f2l_filepath = args[i + 2]  # path to a .csv file, each row is 'filename,label'
-        f2v_filepath = args[i + 3]  # name of file to create, will contain file-name and its vector (name<\t>vec)
+    t0 = time()
+    args = sys.argv[1:]
 
-        # extract names of files
-        file_list = []
-        csv_dict = DictReader(open(f2l_filepath))
-        for row in csv_dict:
-            file_list.append(row['Id'])
-
-        create_file_file2vec(dirpath, file_list, f2v_filepath)
-    else:  # f2v file exists already
-        f2v_filepath = args[2]
-
-    # extract parameters from main
-    model_name = None
-    if SAVE_MODEL in args:
-        model_name = args[args.index(SAVE_MODEL) + 1]
-    show_conf_matrix = SHOW_CONFUSION_MAT in args
-
-    train, y_train = get_data_and_labels('data/train_set.csv', f2v_filepath)
-    test, y_test = get_data_and_labels('data/test_set.csv', f2v_filepath)
-
-    # apply model
+    # create model
     if LOAD_MODEL in args:
         given_model_file = args[args.index(LOAD_MODEL) + 1]
         model = CodeModel.load_from(given_model_file)
+        print 'loaded model'
     else:
         model = CodeModel()
-    model.train_on((train, y_train), model_name)
-    model.predict_and_accuracy_on(test, y_test, show_conf_matrix)
 
+    # train model
+    if TRAIN in args:
+        i = args.index(TRAIN)
+        csv_filepath = args[i + 1]
+        train_f2v_filepath = args[i + 2]
+        train, y_train = get_data_and_labels(csv_filepath, train_f2v_filepath)
 
-def use_exist_model(args):
-    """
-    use an existing model for blind prediction.
-    :param args: arguments from main.
-        options:
-        # add '-create-f2v' to main if it is the first time to encounter the data,
-                that will create a file of the given data that maps file-name to the vector representing it.
-                if passed, you must pass the following arguments in the next order right after that flag:
-                    dirpath files_filepath f2v_filepath
-                explanation on each is right below.
+        # save model
+        model_name = None
+        if SAVE_MODEL in args:
+            model_name = args[args.index(SAVE_MODEL) + 1]
 
-                if not passed, then pass parameters as following:
-                    files_filepath f2v_filepath
-        # dirpath - path to directory where the files are in.
-                    need to pass it only if used '-create-f2v' flag.
-        # files_filepath - path to file, each line in it is a file-name.
-                         must pass it.
-        # f2v_filepath - path to f2v file. must pass it.
-                         if you create it, so this parameter will be the name of the f2v file that
-                          the program will produce.
-        # add '-load' to load an existing model.
-            must pass it, you must pass right after the name of the model file to load.
-        # add '-out-file' and right after a name of file which will contain, after running this program,
-            in each line 'filename,label' where the label is the prediction of the model.
-            must pass it.
-    """
-    if CREATE_F2V_FILE in args:  # in case of first time to process the data
-        i = args.index(CREATE_F2V_FILE)
-        dirpath = args[i + 1]
-        files_filepath = args[i + 2]
-        f2v_filepath = args[i + 3]
+        model.train_on(train, y_train, model_name)
+        print 'trained on data'
 
-        # extract names of files
-        file_list = []
-        with open(files_filepath) as f:
-            for line in f:
-                file_list.append(line)
+    # blind test
+    if TEST in args:
+        i = args.index(TEST)
+        csv_filepath = args[i + 1]
+        test_f2v_filepath = args[i + 2]
+        output_filepath = args[i + 3]
 
-        create_file_file2vec(dirpath, file_list, f2v_filepath)
-    else:  # f2v file exists already
-        files_filepath = args[0]
-        f2v_filepath = args[1]
+        matrix = get_data(test_f2v_filepath)
+        preds = model.predict_on(matrix)
 
-    matrix = get_data(f2v_filepath)  # load data
+        # write output file
+        with open(output_filepath, 'w') as out_file:
+            out_file.write('Id,Class\n')
+            input_file = DictReader(open(csv_filepath))
+            for row, label in zip(input_file, preds):
+                out_file.write('%s,%s\n' % (row['Id'], label))
+        print 'done predicting on test'
 
-    # apply model
-    given_model_file = args[args.index(LOAD_MODEL) + 1]
-    model = CodeModel.load_from(given_model_file)
-    preds = model.predict_on(matrix)
-
-    # write output file
-    output_filepath = args[args.index(OUTPUT_FILE_FLAG) + 1]
-    with open(output_filepath, 'w') as out_file:
-        with open(files_filepath) as input_file:
-            for i, file_name in enumerate(input_file):
-                out_file.write('%s,%i\n' % (file_name, preds[i]))
-
-
-def main():
-    """
-    pass '-train' to train a model and pass the parameters needed in order to train,
-    else pass the parameters needed to predict on blind-test.
-    """
-    print 'start'
-    t0 = time()
-
-    args = sys.argv[1:]
-    if TRAIN in args:  # train a model
-        train_model(args)
-    else:  # blind test
-        use_exist_model(args)
-
-    print 'time to run:', time() - t0
+    print 'time to run model:', time() - t0
 
 
 if __name__ == '__main__':
     """
     parameters to main:
-    -train -create-f2v data/files data/train_labels_filtered.csv f2v.file -save first.model
-    -train data/train_labels_filtered.csv f2v.file -save first.model -show-matrix
+    [-train csv_file f2v_file] [-save new_model_name] [-load model_name] [-test f2v_file output_file]
+    -train  data/train_set.csv f2v/train.f2v -save first.model
     """
     main()
