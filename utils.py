@@ -129,6 +129,7 @@ def get_f2l_dict(filepath):
     return f2l_dict
 
 
+# TODO: Not in use
 def train_test_split(X, y, test_size=0.33):
     """
     :param X: data set, array-like.
@@ -150,7 +151,7 @@ def train_test_split(X, y, test_size=0.33):
         # separate the indexes into train and test
         num_test_samples = int(num_samples * test_size) + 1
         samples_indexes = [i for i, other_label in enumerate(y) if label == other_label]
-        samples_indexes = random.shuffle(samples_indexes)
+        random.shuffle(samples_indexes)
         test_samples_indexes = samples_indexes[:num_test_samples]
         train_samples_indexes = samples_indexes[num_test_samples + 1:]
 

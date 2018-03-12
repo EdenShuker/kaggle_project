@@ -7,7 +7,6 @@ import numpy as np
 import xgboost as xgb
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import train_test_split
 
 import utils
 
@@ -79,16 +78,16 @@ def get_data_and_labels(f2l_filepath, f2v_filepath):
 
     # create file-to-label dict
     f2l_dict = utils.get_f2l_dict(f2l_filepath)
-
     with open(f2v_filepath, 'r') as f:
         for line in f:  # for each file find the vector that representing him
             filename, vec = line.split('\t')
-            vec = map(lambda (x): int(x), vec.split(' '))
+            if filename in f2l_dict.viewkeys():
+                vec = map(lambda (x): int(x), vec.split(' '))
 
-            matrix.append(vec)
-            labels.append(f2l_dict[filename])
+                matrix.append(vec)
+                labels.append(f2l_dict[filename])
     # TODO:#### I have changed it to np
-    # matrix, labels = np.array(matrix), np.array(labels)
+    matrix, labels = np.array(matrix), np.array(labels)
     return matrix, labels
 
 
@@ -215,7 +214,6 @@ def train_model(args):
 
         create_file_file2vec(dirpath, file_list, f2v_filepath)
     else:  # f2v file exists already
-        # TODO: note that before it was 0,1 but '-train' is also part of args
         f2l_filepath = args[1]
         f2v_filepath = args[2]
 
@@ -225,10 +223,14 @@ def train_model(args):
         model_name = args[args.index(SAVE_MODEL) + 1]
     show_conf_matrix = SHOW_CONFUSION_MAT in args
 
-    # load data
-    matrix, labels = get_data_and_labels(f2l_filepath, f2v_filepath)
-    # train, test, y_train, y_test = train_test_split(matrix, labels, test_size=0.33, random_state=42)
-    train, test, y_train, y_test = utils.train_test_split(matrix, labels, test_size=0.33)
+    # # load data
+    # matrix, labels = get_data_and_labels(f2l_filepath, f2v_filepath)
+    # # TODO: files already diverged!
+    #
+    # train, test, y_train, y_test = utils.train_test_split(matrix, labels, test_size=0.33)
+
+    train, y_train = get_data_and_labels('data/train_set.csv', f2v_filepath)
+    test, y_test = get_data_and_labels('data/test_set.csv', f2v_filepath)
 
     # apply model
     if LOAD_MODEL in args:

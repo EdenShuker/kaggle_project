@@ -44,7 +44,7 @@ if __name__ == '__main__':
     activate in the following order:
     python2.7 extract_ngrams.py -n LABEL -p PATH
     for example:
-    python2.7 extract_ngrams.py -n 1 -p trainLabels.csv
+    python2.7 extract_ngrams.py -n 1 -p train_set.csv
     """
     t0 = time()
 
