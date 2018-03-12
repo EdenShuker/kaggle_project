@@ -6,6 +6,11 @@ import random
 
 
 def train_test_split(path_to_files, test_size=0.33):
+    """
+    split given labeled data to train set and test set.
+    :param path_to_files: path to csv file hols list of all files.
+    :param test_size: the relative size of the test set from data.
+    """
     files_to_labels = utils.get_f2l_dict(path_to_files)
     labels_to_files = get_labels_to_files(files_to_labels)
     train_set = {}
@@ -37,8 +42,14 @@ def train_test_split(path_to_files, test_size=0.33):
     save_to_csv_file(test_set, 'test_set')
 
 
-def save_to_csv_file(files_set, f_name, dirpath='data'):
-    csv_f = open(dirpath + '/' + f_name + '.csv', 'w')
+def save_to_csv_file(files_set, f_name, dir_path='data'):
+    """
+    Save to csv file all files names and labels from files_set.
+    :param files_set: dict from files to labels.
+    :param f_name: csv file's name.
+    :param dir_path: the path to the dir we want to create this files in it.
+    """
+    csv_f = open(dir_path + '/' + f_name + '.csv', 'w')
     csv_f.write('Id,Class\n')
     files_set = OrderedDict(sorted(files_set.items(), key=itemgetter(1)))
     for f in files_set.iterkeys():
@@ -47,6 +58,11 @@ def save_to_csv_file(files_set, f_name, dirpath='data'):
 
 
 def get_labels_to_files(files_to_labels):
+    """
+    create diverse dict from labels to list of files.
+    :param files_to_labels: dict from file to its label.
+    :return: dict from label to list of files with that label.
+    """
     labels_to_files = dict()
     for f in files_to_labels:
         label = files_to_labels[f]

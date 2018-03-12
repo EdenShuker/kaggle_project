@@ -70,7 +70,7 @@ def create_file_file2vec(dirpath, files_list, f2v_name):
 
 def get_data_and_labels(f2l_filepath, f2v_filepath):
     """
-    :param f2l_filepath: path to file-to-label file (train_labels_filtered.csv) .
+    :param f2l_filepath: path to file-to-label file (train_set.csv / test_set.csv) .
     :param f2v_filepath: path to file-to-vector file.
     :return: matrix and array of labels, the ith label there is connected to the ith vector in matrix.
     """
@@ -83,10 +83,9 @@ def get_data_and_labels(f2l_filepath, f2v_filepath):
             filename, vec = line.split('\t')
             if filename in f2l_dict.viewkeys():
                 vec = map(lambda (x): int(x), vec.split(' '))
-
                 matrix.append(vec)
                 labels.append(f2l_dict[filename])
-    # TODO:#### I have changed it to np
+
     matrix, labels = np.array(matrix), np.array(labels)
     return matrix, labels
 
@@ -214,7 +213,6 @@ def train_model(args):
 
         create_file_file2vec(dirpath, file_list, f2v_filepath)
     else:  # f2v file exists already
-        f2l_filepath = args[1]
         f2v_filepath = args[2]
 
     # extract parameters from main
@@ -222,12 +220,6 @@ def train_model(args):
     if SAVE_MODEL in args:
         model_name = args[args.index(SAVE_MODEL) + 1]
     show_conf_matrix = SHOW_CONFUSION_MAT in args
-
-    # # load data
-    # matrix, labels = get_data_and_labels(f2l_filepath, f2v_filepath)
-    # # TODO: files already diverged!
-    #
-    # train, test, y_train, y_test = utils.train_test_split(matrix, labels, test_size=0.33)
 
     train, y_train = get_data_and_labels('data/train_set.csv', f2v_filepath)
     test, y_test = get_data_and_labels('data/test_set.csv', f2v_filepath)
