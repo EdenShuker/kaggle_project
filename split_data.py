@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from operator import itemgetter
 
+import sys
+
 import utils
 import random
 
@@ -66,7 +68,7 @@ def get_labels_to_files(files_to_labels):
     labels_to_files = dict()
     for f in files_to_labels:
         label = files_to_labels[f]
-        if not labels_to_files.has_key(label):
+        if label not in labels_to_files:
             labels_to_files[label] = [f]
         else:
             labels_to_files[label].append(f)
@@ -74,4 +76,5 @@ def get_labels_to_files(files_to_labels):
 
 
 if __name__ == '__main__':
-    train_test_split('data/train_labels_filtered.csv')
+    train_test_split(sys.argv[1])
+    print 'done splitting the data'

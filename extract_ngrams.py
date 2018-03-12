@@ -25,13 +25,14 @@ def get_list_of_files_for_label(train_labels_path, label):
     return f_names
 
 
-def get_most_common_ngrams(f_names):
+def get_most_common_ngrams(dirpath, f_names):
     """
+    :param dirpath: path to directory where the given files are in.
     :param f_names: list of file-names.
     :return: list of N most common ngrams out of all files.
     """
     ngrams_dict = Counter()  # count in how many files the ngrams appeared
-    dir_name = 'data/files'
+    dir_name = dirpath
     for f_name in f_names:
         curr_ngrams_set = utils.get_ngrams_set_of(dir_name, f_name)  # ngrams set of current file
         for ngram in curr_ngrams_set:
@@ -56,7 +57,7 @@ if __name__ == '__main__':
 
     file_names = get_list_of_files_for_label(path, label_num)
     # list of tuples, each tuple is (ngrams, num)
-    most_common_ngrams = get_most_common_ngrams(file_names)
+    most_common_ngrams = get_most_common_ngrams(argv[1], file_names)
     pickle.dump(most_common_ngrams, open('ngrams/label_%i' % label_num, 'wb'))
 
-    print 'time to run:', time() - t0
+    print 'time to run label %i:' % label_num, time() - t0
