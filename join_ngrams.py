@@ -85,4 +85,4 @@ def get_selected_features():
 
 if __name__ == '__main__':
     features = get_selected_features()
-    pickle.dump(features, open('ngrams_features', 'w'))
+    pickle.dump(features, open('features/ngrams_features', 'w'))

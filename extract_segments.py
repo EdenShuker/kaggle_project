@@ -45,6 +45,6 @@ if __name__ == '__main__':
     segments = get_segment_set_of('data/files', 'data/train_set.csv')
     segments.add(utils.UNK)
     print segments
-    pickle.dump(segments, open('segments_features', 'w'))
+    pickle.dump(segments, open('features/segments_features', 'w'))
 
     print 'time to run:', time() - t0
