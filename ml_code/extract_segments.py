@@ -3,7 +3,7 @@ from time import time
 
 import pefile
 
-import utils
+from ml_code import utils
 
 
 def get_segment_set_of(dirpath, train_set_path):

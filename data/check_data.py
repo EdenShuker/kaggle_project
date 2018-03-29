@@ -1,7 +1,7 @@
 from collections import defaultdict
 from csv import DictReader
 
-import utils
+from ml_code import utils
 
 
 def csv_dict_to_new_dict():

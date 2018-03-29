@@ -3,7 +3,7 @@ from collections import Counter
 from csv import DictReader
 from sys import argv
 from time import time
-import utils
+from ml_code import utils
 
 LABEL_NUM_FLAG = '-n'
 TRAIN_LABELS_PATH_FLAG = '-p'

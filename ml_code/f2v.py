@@ -2,7 +2,7 @@ import pickle
 import sys
 from csv import DictReader
 
-import utils
+from ml_code import utils
 
 # load feature
 ngrams_features_list = pickle.load(open('features/ngrams_features'))
