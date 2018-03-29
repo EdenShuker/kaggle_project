@@ -73,7 +73,7 @@ def get_best_gain_features(p, n, class_label, dict_all, num_features=750, gain_m
 
 def get_selected_features():
     dict_all = count_ngrams_performances()
-    counter_instances = num_instances('data/train_set.csv')
+    counter_instances = num_instances('../data/train_set.csv')
     num_all = sum(counter_instances.values())
     features_all = []
     for label in range(1, 10):
