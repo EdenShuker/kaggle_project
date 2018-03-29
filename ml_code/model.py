@@ -19,8 +19,8 @@ LOAD_MODEL = '-load'
 OUTPUT_FILE_FLAG = '-out-file'
 
 # load feature
-ngrams_features_list = pickle.load(open('features/ngrams_features'))
-segments_features_set = pickle.load(open('features/segments_features'))
+ngrams_features_list = pickle.load(open('ml_code/features/ngrams_features'))
+segments_features_set = pickle.load(open('ml_code/features/segments_features'))
 
 
 def represent_file_as_vector(dirpath, filename):

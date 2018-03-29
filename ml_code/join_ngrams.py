@@ -14,7 +14,7 @@ def count_ngrams_performances():
     ngram_to_num_occurs = dict()
     for c in range(1, 10):
         # de-serialize counter from file.
-        grams_counter = pickle.load(open('ngrams/label_%i' % c, 'rb'))  # list of tuples (ngram, num)
+        grams_counter = pickle.load(open('ml_code/ngrams/label_%i' % c, 'rb'))  # list of tuples (ngram, num)
         grams_counter = dict(grams_counter)
         for gram in grams_counter:
             if gram not in ngram_to_num_occurs:
@@ -73,7 +73,7 @@ def get_best_gain_features(p, n, class_label, dict_all, num_features=750, gain_m
 
 def get_selected_features():
     dict_all = count_ngrams_performances()
-    counter_instances = num_instances('../data/train_set.csv')
+    counter_instances = num_instances('data/train_set.csv')
     num_all = sum(counter_instances.values())
     features_all = []
     for label in range(1, 10):
@@ -85,5 +85,5 @@ def get_selected_features():
 
 if __name__ == '__main__':
     features = get_selected_features()
-    pickle.dump(features, open('features/ngrams_features', 'w'))
+    pickle.dump(features, open('ml_code/features/ngrams_features', 'w'))
     print 'done joining ngrams'

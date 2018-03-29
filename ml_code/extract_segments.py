@@ -3,7 +3,7 @@ from time import time
 
 import pefile
 
-from ml_code import utils
+import utils
 
 
 def get_segment_set_of(dirpath, train_set_path):
@@ -43,9 +43,9 @@ if __name__ == '__main__':
     t0 = time()
 
     # TODO add the opportunity to pass this path as args to main
-    segments = get_segment_set_of('../data/files', '../data/train_set.csv')
+    segments = get_segment_set_of('data/files', 'data/train_set.csv')
     segments.add(utils.UNK)
     print segments
-    pickle.dump(segments, open('features/segments_features', 'w'))
+    pickle.dump(segments, open('ml_code/features/segments_features', 'w'))
 
     print 'time to run:', time() - t0
