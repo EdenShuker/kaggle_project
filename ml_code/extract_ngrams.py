@@ -3,7 +3,7 @@ from collections import Counter
 from csv import DictReader
 from sys import argv
 from time import time
-from ml_code import utils
+import utils
 
 LABEL_NUM_FLAG = '-n'
 TRAIN_LABELS_PATH_FLAG = '-p'
@@ -58,6 +58,6 @@ if __name__ == '__main__':
     file_names = get_list_of_files_for_label(path, label_num)
     # list of tuples, each tuple is (ngrams, num)
     most_common_ngrams = get_most_common_ngrams(argv[1], file_names)
-    pickle.dump(most_common_ngrams, open('ngrams/label_%i' % label_num, 'wb'))
+    pickle.dump(most_common_ngrams, open('ml_code/ngrams/label_%i' % label_num, 'wb'))
 
     print 'time to run label %i:' % label_num, time() - t0

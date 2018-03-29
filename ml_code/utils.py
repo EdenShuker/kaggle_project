@@ -1,10 +1,9 @@
-import random
 from collections import Counter
 from csv import DictReader
 from os import listdir
 from os.path import isfile, join
+
 import capstone
-import numpy as np
 import pefile
 
 UNK = '_UNK_'
