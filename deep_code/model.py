@@ -88,11 +88,11 @@ def train_on(first_n_byte=2000000):
             adam_optim.zero_grad()
 
             exe_input, label = batch_data[0], batch_data[1]
-            exe_input, label = Variable(exe_input.long()), Variable(label.long())
+            exe_input, label = Variable(exe_input.long()), Variable(label.float())
 
             pred = model(exe_input)
             _, pred = torch.max(pred, 1)
-            loss = bce_loss(pred, label)
+            loss = bce_loss(pred.float(), label)
             loss.backward()
             adam_optim.step()
 

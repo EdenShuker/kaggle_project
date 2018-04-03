@@ -20,7 +20,7 @@ class ExeDataset(Dataset):
                 line.pop(0)
 
                 for bytes_str in line:
-                    tmp.append(int(bytes_str, 16) + 1)
+                    tmp.append((int(bytes_str, 16) + 1.0) / 257)
             tmp = tmp + [0] * (self.first_n_byte - len(tmp))
 
-        return np.array(tmp).astype('int32'), np.array([int(self.label_list[idx]) - 1]).astype('float32')
+        return np.array(tmp).astype('float32'), np.array([int(self.label_list[idx]) - 1]).astype('float32')
