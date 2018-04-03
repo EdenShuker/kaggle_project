@@ -12,7 +12,7 @@ from utils import ExeDataset
 
 
 class MalConv(nn.Module):
-    def __init__(self, input_length=2000000, window_size=500):
+    def __init__(self, labels, input_length=2000000, window_size=500):
         super(MalConv, self).__init__()
 
         self.embed = nn.Embedding(257, 8, padding_idx=0)
@@ -26,6 +26,8 @@ class MalConv(nn.Module):
         self.fc_2 = nn.Linear(128, 9)
 
         self.sigmoid = nn.Sigmoid()
+
+        self.i2l = {i: l for i, l in enumerate(labels)}
 
     def forward(self, x):
         x = self.embed(x)
@@ -71,11 +73,9 @@ def train_on(first_n_byte=2000000):
     bce_loss = nn.BCELoss()
     lr = 0.001
     adam_optim = torch.optim.Adam(model.parameters(), lr)
-    sigmoid = nn.Sigmoid()
 
     valid_best_acc = 0.0
     total_step = 0
-    step_cost_time = 0
 
     max_step = 1
     test_step = 10
@@ -83,7 +83,7 @@ def train_on(first_n_byte=2000000):
     while total_step < max_step:
 
         # Training
-        for step, batch_data in enumerate(dataloader):
+        for batch_data in dataloader:
             start = time.time()
 
             adam_optim.zero_grad()
@@ -106,6 +106,7 @@ def train_on(first_n_byte=2000000):
             # Interupt for validation
             if total_step % test_step == 0:
                 curr_acc = validate_dev_set(validloader, model)
+                print 'time to train:', step_cost_time, 'current-accuracy:', curr_acc
                 if curr_acc > valid_best_acc:
                     valid_best_acc = curr_acc
                     torch.save(model, 'model.file')
@@ -113,7 +114,7 @@ def train_on(first_n_byte=2000000):
 
 def validate_dev_set(validloader, model):
     good = 0.0
-    for _, val_batch_data in enumerate(validloader):
+    for val_batch_data in validloader:
 
         exe_input = val_batch_data[0]
         exe_input = Variable(exe_input.long(), requires_grad=False)
@@ -123,7 +124,7 @@ def validate_dev_set(validloader, model):
 
         preds = model(exe_input).npvalue()
         for vec, label in preds, labels:
-            pred_label = np.argmax(vec)
+            pred_label = model.i2l(np.argmax(vec))
             if pred_label == label:
                 good += 1
     return good / len(validloader)
