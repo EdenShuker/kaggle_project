@@ -14,7 +14,13 @@ class ExeDataset(Dataset):
 
     def __getitem__(self, idx):
         with open(self.data_path + self.fp_list[idx] + '.bytes', 'r') as f:
-            tmp = [int(hex(ord(i))[2:], 16) + 1 for i in f.read()[:self.first_n_byte] if i != ""]
+            tmp = []
+            for line in f:
+                line = line.split()
+                line.pop(0)
+
+                for bytes_str in line:
+                    tmp.append(int(bytes_str, 16) + 1)
             tmp = tmp + [0] * (self.first_n_byte - len(tmp))
 
         return np.array(tmp), np.array([self.label_list[idx]])
