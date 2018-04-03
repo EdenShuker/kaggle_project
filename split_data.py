@@ -76,5 +76,5 @@ def get_labels_to_files(files_to_labels):
 
 
 if __name__ == '__main__':
-    train_test_split(sys.argv[1], sys.argv[2])
+    train_test_split(sys.argv[1], sys.argv[2], float(sys.argv[3]))
     print 'done splitting the data'

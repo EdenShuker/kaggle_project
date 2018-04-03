@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 
 from utils import ExeDataset
 
+
 class MalConv(nn.Module):
     def __init__(self, input_length=2000000, window_size=500):
         super(MalConv, self).__init__()
@@ -43,11 +44,10 @@ class MalConv(nn.Module):
 first_n_byte = 2000000
 model = MalConv()
 
-csv_dict = DictReader(open('train_set'))
+dict_train = DictReader(open('train_set'))
+dict_dev = DictReader(open('test_set'))
 
-
-
-dataloader = DataLoader(ExeDataset(list(tr_table.index), '../data/files', list(tr_table.ground_truth),first_n_byte),
-                            batch_size=1, shuffle=True, num_workers=1)
-validloader = DataLoader(ExeDataset(list(val_table.index), valid_data_path, list(val_table.ground_truth),first_n_byte),
-                        batch_size=1, shuffle=False, num_workers=1)
+dataloader = DataLoader(ExeDataset(dict_train.keys(), '../data/files', list(tr_table.ground_truth), first_n_byte),
+                        batch_size=1, shuffle=True, num_workers=1)
+validloader = DataLoader(ExeDataset(list(val_table.index), valid_data_path, list(val_table.ground_truth), first_n_byte),
+                         batch_size=1, shuffle=False, num_workers=1)

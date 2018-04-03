@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # split train set to test and train
-#python split_data.py data/train_labels_filtered.csv /data
+#python split_data.py data/train_labels_filtered.csv data 0.33
 
 # create features from test files
 if [ ! -d "ml_code/ngrams" ]; then
