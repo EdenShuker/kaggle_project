@@ -95,8 +95,9 @@ def train_on(first_n_byte=2000000):
             label = batch_data[1]
             label = Variable(label.float(), requires_grad=False)
 
-            pred = model(exe_input)
-            pred = model.i2l[np.argmax(pred.data.numpy())]
+            pred = model(exe_input).data.numpy()
+            pred = np.array([model.i2l[np.argmax(pred)]])
+            pred = Variable(torch.FloatTensor(pred), requires_grad=False)
             loss = bce_loss(pred, label)
             loss.backward()
             adam_optim.step()
