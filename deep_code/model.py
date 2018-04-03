@@ -41,13 +41,25 @@ class MalConv(nn.Module):
         return nn.Softmax(x)
 
 
-first_n_byte = 2000000
-model = MalConv()
+def split_csv_dict(csv_filepath):
+    fps = []
+    labels = []
 
-dict_train = DictReader(open('train_set'))
-dict_dev = DictReader(open('test_set'))
+    for row in DictReader(csv_filepath):
+        fps.append(row['Id'])
+        labels.append(row['Class'])
 
-dataloader = DataLoader(ExeDataset(dict_train.keys(), '../data/files', list(tr_table.ground_truth), first_n_byte),
-                        batch_size=1, shuffle=True, num_workers=1)
-validloader = DataLoader(ExeDataset(list(val_table.index), valid_data_path, list(val_table.ground_truth), first_n_byte),
-                         batch_size=1, shuffle=False, num_workers=1)
+    return fps, labels
+
+
+def train_on(first_n_byte=2000000):
+    model = MalConv()
+
+    fps_train, y_train = split_csv_dict('train_set.csv')
+    fps_dev, y_dev = split_csv_dict('test_set.csv')
+
+    files_dirpath = '../data/files'
+    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, first_n_byte),
+                            batch_size=1, shuffle=True, num_workers=1)
+    validloader = DataLoader(ExeDataset(fps_dev, files_dirpath, y_dev, first_n_byte),
+                             batch_size=1, shuffle=False, num_workers=1)
