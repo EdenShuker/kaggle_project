@@ -23,4 +23,4 @@ class ExeDataset(Dataset):
                     tmp.append(int(bytes_str, 16) + 1)
             tmp = tmp + [0] * (self.first_n_byte - len(tmp))
 
-        return np.array(tmp).astype('int32'), np.array([self.label_list[idx]]).astype('int32')
+        return np.array(tmp).astype('int32'), np.array([int(self.label_list[idx]) - 1]).astype('float32')

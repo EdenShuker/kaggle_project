@@ -66,8 +66,7 @@ def train_on(first_n_byte=2000000):
     fps_dev, y_dev = split_csv_dict('test_set.csv')
 
     files_dirpath = '../data/files/'
-    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, first_n_byte),
-                            batch_size=1, shuffle=True, num_workers=1)
+    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, first_n_byte), shuffle=True, num_workers=1)
     validloader = DataLoader(ExeDataset(fps_dev, files_dirpath, y_dev, first_n_byte),
                              batch_size=1, shuffle=False, num_workers=1)
 
@@ -86,24 +85,18 @@ def train_on(first_n_byte=2000000):
         # Training
         for batch_data in dataloader:
             start = time.time()
-
             adam_optim.zero_grad()
 
-            exe_input = batch_data[0]
-            exe_input = Variable(exe_input.long(), requires_grad=False)
+            exe_input, label = batch_data[0], batch_data[1]
+            exe_input, label = Variable(exe_input.long()), Variable(label.long())
 
-            label = batch_data[1]
-            label = Variable(label.float(), requires_grad=False)
-
-            pred = model(exe_input).data.numpy()
-            pred = np.array([model.i2l[np.argmax(pred)]])
-            pred = Variable(torch.FloatTensor(pred), requires_grad=False)
+            pred = model(exe_input)
+            _, pred = torch.max(pred, 1)
             loss = bce_loss(pred, label)
             loss.backward()
             adam_optim.step()
 
             step_cost_time = time.time() - start
-
             total_step += 1
 
             # Interupt for validation
