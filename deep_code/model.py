@@ -26,6 +26,7 @@ class MalConv(nn.Module):
         self.fc_2 = nn.Linear(128, 9)
 
         self.sigmoid = nn.Sigmoid()
+        self.softmax = nn.Softmax()
 
         self.i2l = {i: l for i, l in enumerate(labels)}
 
@@ -44,7 +45,7 @@ class MalConv(nn.Module):
         x = self.fc_1(x)
         x = self.fc_2(x)
 
-        return nn.Softmax(x)
+        return self.softmax(x)
 
 
 def split_csv_dict(csv_filepath):
