@@ -1,7 +1,11 @@
 from csv import DictReader
 
+import time
+
+import numpy as np
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from utils import ExeDataset
@@ -63,3 +67,63 @@ def train_on(first_n_byte=2000000):
                             batch_size=1, shuffle=True, num_workers=1)
     validloader = DataLoader(ExeDataset(fps_dev, files_dirpath, y_dev, first_n_byte),
                              batch_size=1, shuffle=False, num_workers=1)
+
+    bce_loss = nn.BCELoss()
+    lr = 0.001
+    adam_optim = torch.optim.Adam(model.parameters(), lr)
+    sigmoid = nn.Sigmoid()
+
+    valid_best_acc = 0.0
+    total_step = 0
+    step_cost_time = 0
+
+    max_step = 1
+    test_step = 10
+
+    while total_step < max_step:
+
+        # Training
+        for step, batch_data in enumerate(dataloader):
+            start = time.time()
+
+            adam_optim.zero_grad()
+
+            exe_input = batch_data[0]
+            exe_input = Variable(exe_input.long(), requires_grad=False)
+
+            label = batch_data[1]
+            label = Variable(label.float(), requires_grad=False)
+
+            pred = model(exe_input)
+            loss = bce_loss(pred, label)
+            loss.backward()
+            adam_optim.step()
+
+            step_cost_time = time.time() - start
+
+            total_step += 1
+
+            # Interupt for validation
+            if total_step % test_step == 0:
+                curr_acc = validate_dev_set(validloader, model)
+                if curr_acc > valid_best_acc:
+                    valid_best_acc = curr_acc
+                    torch.save(model, 'model.file')
+
+
+def validate_dev_set(validloader, model):
+    good = 0.0
+    for _, val_batch_data in enumerate(validloader):
+
+        exe_input = val_batch_data[0]
+        exe_input = Variable(exe_input.long(), requires_grad=False)
+
+        labels = val_batch_data[1]
+        labels = Variable(labels.float(), requires_grad=False)
+
+        preds = model(exe_input).npvalue()
+        for vec, label in preds, labels:
+            pred_label = np.argmax(vec)
+            if pred_label == label:
+                good += 1
+    return good / len(validloader)
