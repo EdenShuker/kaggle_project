@@ -96,6 +96,7 @@ def train_on(first_n_byte=2000000):
             label = Variable(label.float(), requires_grad=False)
 
             pred = model(exe_input)
+            pred = model.i2l[np.argmax(pred.data.numpy())]
             loss = bce_loss(pred, label)
             loss.backward()
             adam_optim.step()
@@ -125,7 +126,7 @@ def validate_dev_set(validloader, model):
 
         preds = model(exe_input).npvalue()
         for vec, label in preds, labels:
-            pred_label = model.i2l(np.argmax(vec))
+            pred_label = model.i2l[np.argmax(vec.data.numpy())]
             if pred_label == label:
                 good += 1
     return good / len(validloader)
