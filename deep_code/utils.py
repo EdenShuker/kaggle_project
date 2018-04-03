@@ -13,13 +13,8 @@ class ExeDataset(Dataset):
         return len(self.fp_list)
 
     def __getitem__(self, idx):
-        try:
-            with open(self.data_path + self.fp_list[idx]+'.bytes', 'rb') as f:
-                tmp = [i + 1 for i in f.read()[:self.first_n_byte]]
-                tmp = tmp + [0] * (self.first_n_byte - len(tmp))
-        except:
-            with open(self.data_path + self.fp_list[idx].lower()+'.bytes', 'rb') as f:
-                tmp = [i + 1 for i in f.read()[:self.first_n_byte]]
-                tmp = tmp + [0] * (self.first_n_byte - len(tmp))
+        with open(self.data_path + self.fp_list[idx] + '.bytes', 'r') as f:
+            tmp = [int(hex(ord(i))[2:], 16) + 1 for i in f.read()[:self.first_n_byte] if i != ""]
+            tmp = tmp + [0] * (self.first_n_byte - len(tmp))
 
         return np.array(tmp), np.array([self.label_list[idx]])

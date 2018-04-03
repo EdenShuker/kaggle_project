@@ -51,7 +51,7 @@ def split_csv_dict(csv_filepath):
     fps = []
     labels = []
 
-    for row in DictReader(csv_filepath):
+    for row in DictReader(open(csv_filepath)):
         fps.append(row['Id'])
         labels.append(row['Class'])
 
@@ -59,12 +59,12 @@ def split_csv_dict(csv_filepath):
 
 
 def train_on(first_n_byte=2000000):
-    model = MalConv()
+    model = MalConv(range(1, 10))
 
     fps_train, y_train = split_csv_dict('train_set.csv')
     fps_dev, y_dev = split_csv_dict('test_set.csv')
 
-    files_dirpath = '../data/files'
+    files_dirpath = '../data/files/'
     dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, first_n_byte),
                             batch_size=1, shuffle=True, num_workers=1)
     validloader = DataLoader(ExeDataset(fps_dev, files_dirpath, y_dev, first_n_byte),
@@ -128,3 +128,7 @@ def validate_dev_set(validloader, model):
             if pred_label == label:
                 good += 1
     return good / len(validloader)
+
+
+if __name__ == '__main__':
+    train_on()
