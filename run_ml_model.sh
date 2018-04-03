@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # split train set to test and train
-python split_data.py data/train_labels_filtered.csv
+#python split_data.py data/train_labels_filtered.csv /data
 
 # create features from test files
 if [ ! -d "ml_code/ngrams" ]; then
@@ -20,7 +20,7 @@ fi
 python ml_code/join_ngrams.py
 python ml_code/extract_segments.py
 
- create f2v files
+# create f2v files
 if [ ! -d "ml_code/f2v" ]; then
     mkdir ml_code/f2v
 fi

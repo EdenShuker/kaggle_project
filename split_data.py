@@ -7,7 +7,7 @@ from ml_code import utils
 import random
 
 
-def train_test_split(path_to_files, test_size=0.33):
+def train_test_split(path_to_files, dir_path, test_size=0.33):
     """
     split given labeled data to train set and test set.
     :param path_to_files: path to csv file hols list of all files.
@@ -40,11 +40,11 @@ def train_test_split(path_to_files, test_size=0.33):
         for train_sample_i in train_samples_indexes:
             train_set[files_with_label[train_sample_i]] = label
 
-    save_to_csv_file(train_set, 'train_set')
-    save_to_csv_file(test_set, 'test_set')
+    save_to_csv_file(train_set, 'train_set', dir_path)
+    save_to_csv_file(test_set, 'test_set', dir_path)
 
 
-def save_to_csv_file(files_set, f_name, dir_path='data'):
+def save_to_csv_file(files_set, f_name, dir_path):
     """
     Save to csv file all files names and labels from files_set.
     :param files_set: dict from files to labels.
@@ -76,5 +76,5 @@ def get_labels_to_files(files_to_labels):
 
 
 if __name__ == '__main__':
-    train_test_split(sys.argv[1])
+    train_test_split(sys.argv[1], sys.argv[2])
     print 'done splitting the data'
