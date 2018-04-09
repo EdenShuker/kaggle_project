@@ -12,6 +12,11 @@ from utils import ExeDataset
 
 class MalConv(nn.Module):
     def __init__(self, labels, input_length=2000000, window_size=500):
+        """
+        :param labels: list of optional labels.
+        :param input_length: length of input.
+        :param window_size: size of window
+        """
         super(MalConv, self).__init__()
 
         self.embed = nn.Embedding(257, 8, padding_idx=0)
@@ -27,8 +32,13 @@ class MalConv(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
         self.i2l = {i: l for i, l in enumerate(labels)}
+        self.l2i = {l: i for i, l in self.i2l.iteritems()}
 
     def forward(self, x):
+        """
+        :param x: Variable input.
+        :return: Variable output.
+        """
         x = self.embed(x)
         # Channel first
         x = torch.transpose(x, -1, -2)
@@ -47,6 +57,11 @@ class MalConv(nn.Module):
 
 
 def split_csv_dict(csv_filepath):
+    """
+    :param csv_filepath: string representing file-path to csv file,
+                         must contain the following columns: Id, Class
+    :return: two lists, first is of the Id-column and second of Class-column.
+    """
     fps = []
     labels = []
 
@@ -58,15 +73,25 @@ def split_csv_dict(csv_filepath):
 
 
 def train_on(first_n_byte=2000000, lr=0.001, verbose=True, num_epochs=10):
+    """
+    :param first_n_byte: number of bytes to read from each file.
+    :param lr: learning rate.
+    :param verbose: boolean.
+    :param num_epochs: number of epochs.
+    """
+    # create model
     model = MalConv(range(1, 10))
+    l2i = model.l2i
 
+    # load data
     fps_train, y_train = split_csv_dict('train_set.csv')
     fps_dev, y_dev = split_csv_dict('test_set.csv')
 
+    # transfer data to DataLoader object
     files_dirpath = '../data/files/'
-    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, first_n_byte),
+    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, l2i, first_n_byte),
                             batch_size=1, shuffle=True, num_workers=1)
-    validloader = DataLoader(ExeDataset(fps_dev, files_dirpath, y_dev, first_n_byte),
+    validloader = DataLoader(ExeDataset(fps_dev, files_dirpath, y_dev, l2i, first_n_byte),
                              batch_size=1, shuffle=False, num_workers=1)
 
     cross_entropy_loss = nn.CrossEntropyLoss()
@@ -102,18 +127,24 @@ def train_on(first_n_byte=2000000, lr=0.001, verbose=True, num_epochs=10):
 
             total_step += 1
 
-            # Interrupt for validation
-            if total_step % test_step == test_step - 1:
+            if total_step % test_step == test_step - 1:  # interrupt for validation
                 curr_acc = validate_dev_set(validloader, model, verbose)
-                if curr_acc > valid_best_acc:
+                if curr_acc > valid_best_acc:  # update best accuracy
                     valid_best_acc = curr_acc
                     torch.save(model, 'model.file')
         acc = good / len(y_train)
-        print epoch, 'TRN\ttime:', time() - t0, ', accuracy:', acc * 100, '%'
+        print str(epoch) + 'TRN\ttime:', time() - t0, ', accuracy:', acc * 100, '%'
 
 
 def validate_dev_set(valid_loader, model, verbose=True):
-    print '\n##########\tDEV\t##########'
+    """
+    check performance of model on dev-set.
+    :param valid_loader: DataLoader.
+    :param model: Module which is the model to check with.
+    :param verbose: boolean.
+    :return: model accuracy on dev-set.
+    """
+    print '##########\tDEV\t##########'
     t0 = time()
     good = 0.0
 
