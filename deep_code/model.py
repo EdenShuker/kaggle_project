@@ -1,6 +1,5 @@
 from csv import DictReader
-
-import time
+from time import time
 
 import numpy as np
 import torch
@@ -26,7 +25,6 @@ class MalConv(nn.Module):
         self.fc_2 = nn.Linear(128, 9)
 
         self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax()
 
         self.i2l = {i: l for i, l in enumerate(labels)}
 
@@ -45,7 +43,7 @@ class MalConv(nn.Module):
         x = self.fc_1(x)
         x = self.fc_2(x)
 
-        return self.softmax(x)
+        return x
 
 
 def split_csv_dict(csv_filepath):
@@ -59,80 +57,85 @@ def split_csv_dict(csv_filepath):
     return fps, labels
 
 
-def train_on(first_n_byte=2000000):
+def train_on(first_n_byte=2000000, lr=0.001, verbose=True, num_epochs=10):
     model = MalConv(range(1, 10))
 
     fps_train, y_train = split_csv_dict('train_set.csv')
     fps_dev, y_dev = split_csv_dict('test_set.csv')
 
     files_dirpath = '../data/files/'
-    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, first_n_byte), batch_size=1, shuffle=True,
-                            num_workers=1)
+    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, first_n_byte),
+                            batch_size=1, shuffle=True, num_workers=1)
     validloader = DataLoader(ExeDataset(fps_dev, files_dirpath, y_dev, first_n_byte),
                              batch_size=1, shuffle=False, num_workers=1)
 
     cross_entropy_loss = nn.CrossEntropyLoss()
-    lr = 0.001
     adam_optim = torch.optim.Adam(model.parameters(), lr)
 
     valid_best_acc = 0.0
     total_step = 0
-
-    max_step = 1
     test_step = 20
 
-    while total_step < max_step:
+    for epoch in range(num_epochs):
+        t0 = time()
+        good = 0.0
 
-        # Training
         for batch_data in dataloader:
-            start = time.time()
             adam_optim.zero_grad()
 
             exe_input, label = batch_data[0], batch_data[1]
-            exe_input, label = Variable(exe_input.long()), Variable(label.long())
-            label = label.squeeze()
+            exe_input, label = Variable(exe_input.long()), Variable(label.long()).squeeze()
             pred = model(exe_input)
 
-            print('correct label: ' + str(label.data.numpy()[0]))
-            print('pred: ' + str((torch.max(pred, 1)[1]).data.numpy()[0]))
+            gold_label = label.data.numpy()[0]
+            pred_label = torch.max(pred, 1)[1].data.numpy()[0]
+            gold_label, pred_label = model.i2l[gold_label], model.i2l[pred_label]
 
-            loss = cross_entropy_loss(pred.float(), label)
+            if verbose:
+                print 'gold: ', gold_label, ', pred: ', pred_label
+            if gold_label == pred_label:
+                good += 1
+
+            loss = cross_entropy_loss(pred, label)
             loss.backward()
             adam_optim.step()
 
-            step_cost_time = time.time() - start
             total_step += 1
 
-            # Interupt for validation
-            if total_step % test_step == 0:
-                curr_acc = validate_dev_set(validloader, model)
-                print 'time to train:', step_cost_time, 'current-accuracy:', curr_acc * 100, '%'
+            # Interrupt for validation
+            if total_step % test_step == test_step - 1:
+                curr_acc = validate_dev_set(validloader, model, verbose)
                 if curr_acc > valid_best_acc:
                     valid_best_acc = curr_acc
                     torch.save(model, 'model.file')
+        acc = good / len(y_train)
+        print epoch, 'TRN\ttime:', time() - t0, ', accuracy:', acc * 100, '%'
 
 
-def validate_dev_set(validloader, model):
-    print('\n##########################')
-    print('Validation')
+def validate_dev_set(valid_loader, model, verbose=True):
+    print '\n##########\tDEV\t##########'
+    t0 = time()
     good = 0.0
-    for val_batch_data in validloader:
-        exe_input = val_batch_data[0]
-        exe_input = Variable(exe_input.long(), requires_grad=False)
 
-        labels = val_batch_data[1]
-        labels = Variable(labels.float(), requires_grad=False)
-        labels = labels.data.numpy()
-        preds = model(exe_input).data.numpy()
+    for val_batch_data in valid_loader:
+        exe_input, labels = val_batch_data[0], val_batch_data[1]
+        exe_input, labels = Variable(exe_input.long(), requires_grad=False), \
+                            Variable(labels.long(), requires_grad=False)
+        preds, labels = model(exe_input).data.numpy(), labels.data.numpy()
 
-        for i, vec in enumerate(preds):
-            pred_label = model.i2l[np.argmax(vec)]
-            print('correct label: ' + str(int(labels[i][0])))
-            print('pred: ' + str(pred_label))
-            if pred_label == int(labels[i][0]):
+        for pred, gold_label in zip(preds, labels):
+            pred_label, gold_label = np.argmax(pred), gold_label[0]
+            pred_label, gold_label = model.i2l[pred_label], model.i2l[gold_label]
+
+            if verbose:
+                print 'gold: ', gold_label, ', pred: ', pred_label
+
+            if gold_label == pred_label:
                 good += 1
-    return good / len(validloader)
+    acc = good / len(valid_loader)
+    print ' DEV\ttime:', time() - t0, ', accuracy:', acc * 100, '%\n'
+    return acc
 
 
 if __name__ == '__main__':
-    train_on()
+    train_on(verbose=True)
