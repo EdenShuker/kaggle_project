@@ -15,13 +15,17 @@ class ExeDataset(Dataset):
     def __getitem__(self, idx):
         with open(self.data_path + self.fp_list[idx] + '.bytes', 'r') as f:
             tmp = []
+            is_break = False
             for line in f:
                 line = line.split()
                 line.pop(0)
                 for bytes_str in line:
                     if bytes_str == '??':
+                        is_break = True
                         break
                     tmp.append((int(bytes_str, 16) + 1.0) / 257)
+                if is_break:
+                    break
 
             tmp = tmp + [0] * (self.first_n_byte - len(tmp))
 
