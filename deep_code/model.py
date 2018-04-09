@@ -66,11 +66,12 @@ def train_on(first_n_byte=2000000):
     fps_dev, y_dev = split_csv_dict('test_set.csv')
 
     files_dirpath = '../data/files/'
-    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, first_n_byte), shuffle=True, num_workers=1)
+    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, first_n_byte), batch_size=1, shuffle=True,
+                            num_workers=1)
     validloader = DataLoader(ExeDataset(fps_dev, files_dirpath, y_dev, first_n_byte),
                              batch_size=1, shuffle=False, num_workers=1)
 
-    bce_loss = nn.BCELoss()
+    cross_entropy_loss = nn.CrossEntropyLoss()
     lr = 0.001
     adam_optim = torch.optim.Adam(model.parameters(), lr)
 
@@ -88,11 +89,13 @@ def train_on(first_n_byte=2000000):
             adam_optim.zero_grad()
 
             exe_input, label = batch_data[0], batch_data[1]
-            exe_input, label = Variable(exe_input.long()), Variable(label.float())
-
+            exe_input, label = Variable(exe_input.long()), Variable(label.long())
+            label = label.squeeze()
             pred = model(exe_input)
-            _, pred = torch.max(pred, 1)
-            loss = bce_loss(pred.float(), label)
+            # print(pred)
+            # _, pred = torch.max(pred, 1)
+
+            loss = cross_entropy_loss(pred.float(), label)
             loss.backward()
             adam_optim.step()
 
