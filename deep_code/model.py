@@ -92,8 +92,6 @@ def train_on(first_n_byte=2000000):
             exe_input, label = Variable(exe_input.long()), Variable(label.long())
             label = label.squeeze()
             pred = model(exe_input)
-            # print(pred)
-            # _, pred = torch.max(pred, 1)
 
             loss = cross_entropy_loss(pred.float(), label)
             loss.backward()
@@ -114,17 +112,19 @@ def train_on(first_n_byte=2000000):
 def validate_dev_set(validloader, model):
     good = 0.0
     for val_batch_data in validloader:
-
         exe_input = val_batch_data[0]
         exe_input = Variable(exe_input.long(), requires_grad=False)
 
         labels = val_batch_data[1]
         labels = Variable(labels.float(), requires_grad=False)
+        labels = labels.data.numpy()
+        preds = model(exe_input).data.numpy()
 
-        preds = model(exe_input).npvalue()
-        for vec, label in preds, labels:
-            pred_label = model.i2l[np.argmax(vec.data.numpy())]
-            if pred_label == label:
+        for i, vec in enumerate(preds):
+            pred_label = model.i2l[np.argmax(vec)]
+            print('correct label: ' + str(int(labels[i][0])))
+            print('pred: ' + str(pred_label))
+            if pred_label == int(labels[i][0]):
                 good += 1
     return good / len(validloader)
 
