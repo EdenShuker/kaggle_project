@@ -79,7 +79,7 @@ def train_on(first_n_byte=2000000):
     total_step = 0
 
     max_step = 1
-    test_step = 10
+    test_step = 20
 
     while total_step < max_step:
 
@@ -93,6 +93,9 @@ def train_on(first_n_byte=2000000):
             label = label.squeeze()
             pred = model(exe_input)
 
+            print('correct label: ' + str(label.data.numpy()[0]))
+            print('pred: ' + str((torch.max(pred, 1)[1]).data.numpy()[0]))
+
             loss = cross_entropy_loss(pred.float(), label)
             loss.backward()
             adam_optim.step()
@@ -103,13 +106,15 @@ def train_on(first_n_byte=2000000):
             # Interupt for validation
             if total_step % test_step == 0:
                 curr_acc = validate_dev_set(validloader, model)
-                print 'time to train:', step_cost_time, 'current-accuracy:', curr_acc
+                print 'time to train:', step_cost_time, 'current-accuracy:', curr_acc * 100, '%'
                 if curr_acc > valid_best_acc:
                     valid_best_acc = curr_acc
                     torch.save(model, 'model.file')
 
 
 def validate_dev_set(validloader, model):
+    print('\n##########################')
+    print('Validation')
     good = 0.0
     for val_batch_data in validloader:
         exe_input = val_batch_data[0]
