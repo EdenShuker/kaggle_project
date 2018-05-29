@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+import glob
+import random
 
 from utils import ExeDataset
 
@@ -30,7 +32,7 @@ class MalConv(nn.Module):
         self.fc_2 = nn.Linear(128, 9)
 
         self.sigmoid = nn.Sigmoid()
-
+        # TODO: unnecessary when classes labels starts with 0.
         self.i2l = {i: l for i, l in enumerate(labels)}
         self.l2i = {l: i for i, l in self.i2l.iteritems()}
 
@@ -56,23 +58,34 @@ class MalConv(nn.Module):
         return x
 
 
-def split_csv_dict(csv_filepath):
+def split_to_files_and_labels(data_set):
     """
-    :param csv_filepath: string representing file-path to csv file,
-                         must contain the following columns: Id, Class
+    :param: data set of tuples - (file_path, label)
     :return: two lists, first is of the Id-column and second of Class-column.
     """
     fps = []
     labels = []
-
-    for row in DictReader(open(csv_filepath)):
-        fps.append(row['Id'])
-        labels.append(row['Class'])
-
+    for f_path, label in data_set:
+        fps.append(f_path)
+        labels.append(label)
     return fps, labels
 
 
-def train_on(first_n_byte=2000000, lr=0.001, verbose=True, num_epochs=10):
+def split_data_set(path2label):
+    """
+    :param path2label: dictionary of file paths to their labels.
+    :return: 2 data sets of tuples (file_path, label) - train_set and dev_set
+    """
+    keys = list(path2label.viewkeys())
+    random.shuffle(keys)
+    data_set = [(key, path2label[key]) for key in keys]
+    split_ratio = int(np.floor(len(keys) * 0.8))
+    train_set = data_set[:split_ratio]
+    dev_set = data_set[split_ratio:]
+    return train_set, dev_set
+
+
+def train_on(path2label, first_n_byte=2000000, lr=0.001, verbose=True, num_epochs=10):
     """
     :param first_n_byte: number of bytes to read from each file.
     :param lr: learning rate.
@@ -80,18 +93,18 @@ def train_on(first_n_byte=2000000, lr=0.001, verbose=True, num_epochs=10):
     :param num_epochs: number of epochs.
     """
     # create model
-    model = MalConv(range(1, 10))
+    model = MalConv(range(0, 9))
     l2i = model.l2i
 
     # load data
-    fps_train, y_train = split_csv_dict('train_set.csv')
-    fps_dev, y_dev = split_csv_dict('test_set.csv')
+    train_set, dev_set = split_data_set(path2label)
+    fps_train, y_train = split_to_files_and_labels(train_set)
+    fps_dev, y_dev = split_to_files_and_labels(dev_set)
 
     # transfer data to DataLoader object
-    files_dirpath = '../data/files/'
-    dataloader = DataLoader(ExeDataset(fps_train, files_dirpath, y_train, l2i, first_n_byte),
+    dataloader = DataLoader(ExeDataset(fps_train, y_train, l2i, first_n_byte),
                             batch_size=1, shuffle=True, num_workers=1)
-    validloader = DataLoader(ExeDataset(fps_dev, files_dirpath, y_dev, l2i, first_n_byte),
+    validloader = DataLoader(ExeDataset(fps_dev, y_dev, l2i, first_n_byte),
                              batch_size=1, shuffle=False, num_workers=1)
 
     cross_entropy_loss = nn.CrossEntropyLoss()
@@ -168,5 +181,18 @@ def validate_dev_set(valid_loader, model, verbose=True):
     return acc
 
 
+def get_data(dir_path):
+    path2label = dict()
+    dir2label = DictReader(open('dir_paths.csv'))
+    for row in dir2label:
+        dir_name = row['Dir']
+        label = row['Class']
+        files = glob.glob(dir_path + '/' + dir_name + '/*.bytes')
+        for file in files:
+            path2label[file] = label
+    return path2label
+
+
 if __name__ == '__main__':
-    train_on(verbose=True)
+    path2label = get_data('/home/eden/project')
+    train_on(path2label, verbose=True)

@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 
 
 class ExeDataset(Dataset):
-    def __init__(self, fp_list, data_path, label_list, l2i, first_n_byte=2000000):
+    def __init__(self, fp_list, label_list, l2i, first_n_byte=2000000):
         """
         :param fp_list: list of strings, each is file-path.
         :param data_path: string which is a path to the directory where the files mentioned in fp_list are in.
@@ -12,7 +12,6 @@ class ExeDataset(Dataset):
         :param first_n_byte: number of bytes to read from each file.
         """
         self.fp_list = fp_list
-        self.data_path = data_path
         self.label_list = label_list
         self.l2i = l2i
         self.first_n_byte = first_n_byte
@@ -31,7 +30,7 @@ class ExeDataset(Dataset):
         return int(bytes_str, 16) + 1
 
     def __getitem__(self, idx):
-        with open(self.data_path + self.fp_list[idx] + '.bytes', 'r') as f:
+        with open(self.fp_list[idx], 'r') as f:
             tmp = []
             for line in f:
                 line = line.split()
@@ -42,5 +41,5 @@ class ExeDataset(Dataset):
 
             # padding with zeroes such that all files will be of the same size
             tmp = tmp + [0] * (self.first_n_byte - len(tmp))
-
+        f.close()
         return np.array(tmp), np.array([self.l2i[int(self.label_list[idx])]])
