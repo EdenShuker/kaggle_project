@@ -1,14 +1,13 @@
 import pickle
 from time import time
-
 import pefile
-
 import utils
 
 
 def get_segment_set_of(dirpath, train_set_path):
     """
     :param dirpath: path to directory.
+    :param train_set_path: path to trainLabels.csv .
     :return: set of segments-names extracted from all the files in the given directory.
     """
     seg_set = set()

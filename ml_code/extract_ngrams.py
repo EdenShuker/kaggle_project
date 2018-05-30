@@ -1,9 +1,9 @@
+import utils
 import pickle
 from collections import Counter
 from csv import DictReader
 from sys import argv
 from time import time
-import utils
 
 LABEL_NUM_FLAG = '-n'
 TRAIN_LABELS_PATH_FLAG = '-p'
@@ -32,9 +32,8 @@ def get_most_common_ngrams(dirpath, f_names):
     :return: list of N most common ngrams out of all files.
     """
     ngrams_dict = Counter()  # count in how many files the ngrams appeared
-    dir_name = dirpath
     for f_name in f_names:
-        curr_ngrams_set = utils.get_ngrams_set_of(dir_name, f_name)  # ngrams set of current file
+        curr_ngrams_set = utils.get_ngrams_set_of(dirpath, f_name)  # ngrams set of current file
         for ngram in curr_ngrams_set:
             ngrams_dict[ngram] += 1
     return ngrams_dict.most_common(MOST_COMMON_NUM)
@@ -43,9 +42,9 @@ def get_most_common_ngrams(dirpath, f_names):
 if __name__ == '__main__':
     """
     activate in the following order:
-    python2.7 extract_ngrams.py -n LABEL -p PATH
+    python2.7 extract_ngrams.py path -n LABEL -p PATH
     for example:
-    python2.7 extract_ngrams.py -n 1 -p train_set.csv
+    python2.7 extract_ngrams.py data/files -n 1 -p train_set.csv
     """
     t0 = time()
 

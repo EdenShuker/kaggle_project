@@ -4,7 +4,7 @@ p0
 ((lp1
 S'CODE'
 p2
-aS'.bss'
+aS'.rdata'
 p3
 aS'_UNK_'
 p4
@@ -54,9 +54,9 @@ aS'.xdata'
 p26
 aS'.idata'
 p27
-aS'.eh_fram'
+aS'.bss'
 p28
-aS'.rdata'
+aS'PAGEWdfV'
 p29
 aS'.code'
 p30

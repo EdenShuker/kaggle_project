@@ -1,18 +1,16 @@
 from collections import OrderedDict
-from csv import DictReader
 from operator import itemgetter
-
 import sys
-
-from ml_code import utils
 import random
+from ml_code import utils
 
 
-def train_test_split(path_to_files, dir_path, test_size=0.33):
+def train_test_split(path_to_files, target_dir_path, test_size=0.33):
     """
     split given labeled data to train set and test set.
-    :param path_to_files: path to csv file hols list of all files.
-    :param test_size: the relative size of the test set from data.
+    :param path_to_files: path to csv file which holds list of all files.
+    :param target_dir_path: path to dir where the files will be created in.
+    :param test_size: (float) the relative size of the test set from data.
     """
     files_to_labels = utils.get_f2l_dict(path_to_files)
     labels_to_files = get_labels_to_files(files_to_labels)
@@ -41,8 +39,8 @@ def train_test_split(path_to_files, dir_path, test_size=0.33):
         for train_sample_i in train_samples_indexes:
             train_set[files_with_label[train_sample_i]] = label
 
-    save_to_csv_file(train_set, 'train_set', dir_path)
-    save_to_csv_file(test_set, 'test_set', dir_path)
+    save_to_csv_file(train_set, 'train_set', target_dir_path)
+    save_to_csv_file(test_set, 'test_set', target_dir_path)
 
 
 def save_to_csv_file(files_set, f_name, dir_path):
@@ -62,7 +60,7 @@ def save_to_csv_file(files_set, f_name, dir_path):
 
 def get_labels_to_files(files_to_labels):
     """
-    create diverse dict from labels to list of files.
+    create reverse dict from labels to list of files.
     :param files_to_labels: dict from file to its label.
     :return: dict from label to list of files with that label.
     """
@@ -77,5 +75,9 @@ def get_labels_to_files(files_to_labels):
 
 
 if __name__ == '__main__':
+    """
+    args:    csv_file_path target_dir_path split_percentage
+    example: data/train_labels_filtered.csv data 0.33
+    """
     train_test_split(sys.argv[1], sys.argv[2], float(sys.argv[3]))
     print 'done splitting the data'

@@ -7,66 +7,12 @@ import numpy as np
 import xgboost as xgb
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
-
 import utils
 
-CREATE_F2V_FILE = '-create-f2v'
 SAVE_MODEL = '-save'
-SHOW_CONFUSION_MAT = '-show-matrix'
 TRAIN = '-train'
 TEST = '-test'
 LOAD_MODEL = '-load'
-OUTPUT_FILE_FLAG = '-out-file'
-
-# load feature
-ngrams_features_list = pickle.load(open('ml_code/features/ngrams_features'))
-segments_features_set = pickle.load(open('ml_code/features/segments_features'))
-
-
-def represent_file_as_vector(dirpath, filename):
-    """
-    :param dirpath: path of directory that the given file is in.
-    :param filename: name of file, with the extension(= .bytes or .asm) .
-    :return: vector of features that represents the given file.
-    """
-    vec = []
-
-    # ngrams
-    curr_ngrams_set = utils.get_ngrams_set_of(dirpath, filename, n=4)
-    for feature in ngrams_features_list:
-        # TODO current - boolean of 'is ngram in file', optional - how many time ngrams in file
-        if feature in curr_ngrams_set:
-            vec.append(1)
-        else:
-            vec.append(0)
-
-    # segments
-    seg_counter = utils.count_seg_counts(dirpath, filename, segments_features_set)
-    for seg_name in segments_features_set:
-        if seg_name in seg_counter:
-            vec.append(seg_counter[seg_name])
-        else:
-            vec.append(0)
-
-    return vec
-
-
-def create_file_file2vec(dirpath, files_list, f2v_name):
-    """
-    :param dirpath: path to directory that the given files are in.
-    :param files_list: list of files-names.
-    :param f2v_name: output file, will contain file-name and the vector that represents it.
-        Format of file: filename<\t>vec
-    """
-    # TODO change the format of each vector only in the f2v.file
-    #      for each vector, for ngrams save only the indexes and for segments as regular
-    #      when reading the f2v.file and the model needs to train parse it to a regular vector by starting
-    #      with zeroes and then modify the vector according to the indexes
-    with open(f2v_name, 'w') as f:
-        for f_name in files_list:
-            vec = represent_file_as_vector(dirpath, f_name)  # represent each file as a vector
-            vec = map(lambda x: str(x), vec)
-            f.write(f_name + '\t' + ' '.join(vec) + '\n')
 
 
 def get_data_and_labels(f2l_filepath, f2v_filepath):
@@ -132,22 +78,6 @@ class CodeModel(object):
         preds = self.model.predict(matrix)
         # return [round(val) for val in preds]
         return preds
-
-    def predict_and_accuracy_on(self, matrix, labels, show_confusion_matrix=False):
-        """
-        :param matrix: each row in it is a vector that represents some file.
-        :param labels: list of labels, the ith-label is connected to the ith-vector in matrix.
-        :param show_confusion_matrix: boolean, determine if to show to the user confusion matrix.
-        :return:
-        """
-        # predict and find accuracy
-        preds = self.predict_on(matrix)
-        acc = accuracy_score(labels, preds)
-        print 'accuracy %0.2f%%' % (acc * 100.0)
-
-        # confusion matrix
-        if show_confusion_matrix:
-            print confusion_matrix(labels, preds)
 
     def train_on(self, train_matrix, labels, model_name=None):
         """

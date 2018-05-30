@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # split train set to test and train
-#python split_data.py data/train_labels_filtered.csv data 0.33
+python split_data.py data/train_labels_filtered.csv data 0.33
 
 # create features from test files
 if [ ! -d "ml_code/ngrams" ]; then
@@ -29,4 +29,7 @@ python ml_code/f2v.py data/files data/test_set.csv ml_code/f2v/test.f2v
 
 # run model on splitted data
 python ml_code/model.py  -train data/train_set.csv ml_code/f2v/train.f2v -save ml_code/first.model -test data/test_set.csv ml_code/f2v/test.f2v ml_code/test.output
-python ml_code/eval_model.py data/test_set.csv ml_code/test.output
+python ml_code/eval_model.py data/test_set.csv ml_code/test.output -show-matrix
+
+#python ml_code/model.py -load ml_code/first_9677.model -test data/train_set.csv ml_code/f2v/train.f2v ml_code/train.output
+#python ml_code/eval_model.py data/train_set.csv ml_code/train.output -show-matrix
