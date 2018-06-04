@@ -11,6 +11,9 @@ import random
 
 from utils import ExeDataset
 
+log = open('log.txt', 'w')
+num_classes = 4
+
 
 class MalConv(nn.Module):
     def __init__(self, labels, input_length=2000000, window_size=500):
@@ -29,7 +32,7 @@ class MalConv(nn.Module):
         self.pooling = nn.MaxPool1d(int(input_length / window_size))
 
         self.fc_1 = nn.Linear(128, 128)
-        self.fc_2 = nn.Linear(128, 9)
+        self.fc_2 = nn.Linear(128, num_classes)
 
         self.sigmoid = nn.Sigmoid()
         # TODO: unnecessary when classes labels starts with 0.
@@ -85,7 +88,7 @@ def split_data_set(path2label):
     return train_set, dev_set
 
 
-def train_on(path2label, first_n_byte=2000000, lr=0.001, verbose=True, num_epochs=10):
+def train_on(path2label, first_n_byte=2000000, lr=0.001, verbose=True, num_epochs=15):
     """
     :param first_n_byte: number of bytes to read from each file.
     :param lr: learning rate.
@@ -93,7 +96,7 @@ def train_on(path2label, first_n_byte=2000000, lr=0.001, verbose=True, num_epoch
     :param num_epochs: number of epochs.
     """
     # create model
-    model = MalConv(range(0, 9))
+    model = MalConv(range(1, num_classes + 1))
     l2i = model.l2i
 
     # load data
@@ -103,16 +106,16 @@ def train_on(path2label, first_n_byte=2000000, lr=0.001, verbose=True, num_epoch
 
     # transfer data to DataLoader object
     dataloader = DataLoader(ExeDataset(fps_train, y_train, l2i, first_n_byte),
-                            batch_size=1, shuffle=True, num_workers=1)
+                            batch_size=64, shuffle=True, num_workers=1)
     validloader = DataLoader(ExeDataset(fps_dev, y_dev, l2i, first_n_byte),
-                             batch_size=1, shuffle=False, num_workers=1)
+                             batch_size=64, shuffle=False, num_workers=1)
 
     cross_entropy_loss = nn.CrossEntropyLoss()
     adam_optim = torch.optim.Adam(model.parameters(), lr)
 
     valid_best_acc = 0.0
     total_step = 0
-    test_step = 20
+    test_step = 2500
 
     for epoch in range(num_epochs):
         t0 = time()
@@ -125,28 +128,34 @@ def train_on(path2label, first_n_byte=2000000, lr=0.001, verbose=True, num_epoch
             exe_input, label = Variable(exe_input.long()), Variable(label.long()).squeeze()
             pred = model(exe_input)
 
-            gold_label = label.data.numpy()[0]
-            pred_label = torch.max(pred, 1)[1].data.numpy()[0]
-            gold_label, pred_label = model.i2l[gold_label], model.i2l[pred_label]
-
-            if verbose:
-                print 'gold: ', gold_label, ', pred: ', pred_label
-            if gold_label == pred_label:
-                good += 1
-
             loss = cross_entropy_loss(pred, label)
             loss.backward()
             adam_optim.step()
 
+            gold_label = label.data.numpy()
+            pred_label = torch.max(pred, 1)[1].data.numpy()
+
+            for y1, y2 in zip(gold_label, pred_label):
+                if y1 == y2:
+                    good += 1
+                if verbose:
+                    print 'gold: ', y1, ', pred: ', y2
+
             total_step += 1
 
-            if total_step % test_step == test_step - 1:  # interrupt for validation
-                curr_acc = validate_dev_set(validloader, model, verbose)
-                if curr_acc > valid_best_acc:  # update best accuracy
-                    valid_best_acc = curr_acc
-                    torch.save(model, 'model.file')
+            # if total_step % test_step == test_step - 1:  # interrupt for validation
+            #     curr_acc = validate_dev_set(validloader, model, verbose)
+            #     if curr_acc > valid_best_acc:  # update best accuracy
+            #         valid_best_acc = curr_acc
+            #         torch.save(model, 'model.file')
         acc = good / len(y_train)
-        print str(epoch) + 'TRN\ttime:', time() - t0, ', accuracy:', acc * 100, '%'
+        log.write('{} TRN\ttime: {:.2f} accuracy: {}'.format(epoch, time() - t0, acc))
+        acc_dev = validate_dev_set(validloader, model, verbose)
+        log.write(' DEV\taccuracy: {}'.format(acc_dev))
+        if acc_dev > valid_best_acc:
+            valid_best_acc = acc_dev
+            torch.save(model, 'model.file')
+    torch.save(model, 'model_final.file')
 
 
 def validate_dev_set(valid_loader, model, verbose=True):
@@ -158,6 +167,7 @@ def validate_dev_set(valid_loader, model, verbose=True):
     :return: model accuracy on dev-set.
     """
     print '##########\tDEV\t##########'
+    log.write('##########\tDEV\t##########')
     t0 = time()
     good = 0.0
 
@@ -165,11 +175,12 @@ def validate_dev_set(valid_loader, model, verbose=True):
         exe_input, labels = val_batch_data[0], val_batch_data[1]
         exe_input, labels = Variable(exe_input.long(), requires_grad=False), \
                             Variable(labels.long(), requires_grad=False)
-        preds, labels = model(exe_input).data.numpy(), labels.data.numpy()
+        preds, labels = model(exe_input), labels.data.numpy()
+        pred_label = torch.max(preds, 1)[1].data.numpy()
 
-        for pred, gold_label in zip(preds, labels):
-            pred_label, gold_label = np.argmax(pred), gold_label[0]
-            pred_label, gold_label = model.i2l[pred_label], model.i2l[gold_label]
+        for pred, gold_label in zip(pred_label, labels):
+            # pred_label, gold_label = np.argmax(pred), gold_label[0]
+            # pred_label, gold_label = model.i2l[pred_label], model.i2l[gold_label]
 
             if verbose:
                 print 'gold: ', gold_label, ', pred: ', pred_label
@@ -178,15 +189,16 @@ def validate_dev_set(valid_loader, model, verbose=True):
                 good += 1
     acc = good / len(valid_loader)
     print ' DEV\ttime:', time() - t0, ', accuracy:', acc * 100, '%\n'
+    log.write(' DEV\ttime: {:.2f} accuracy: {}'.format(time() - t0, acc))
     return acc
 
 
 def get_data(dir_path):
     path2label = dict()
-    dir2label = DictReader(open('dir_paths.csv'))
+    dir2label = DictReader(open('../data/label2dir.csv'))  # todo change path
     for row in dir2label:
         dir_name = row['Dir']
-        label = row['Class']
+        label = row['Label']
         files = glob.glob(dir_path + '/' + dir_name + '/*.bytes')
         for file in files:
             path2label[file] = label
@@ -194,5 +206,5 @@ def get_data(dir_path):
 
 
 if __name__ == '__main__':
-    path2label = get_data('/home/eden/project')
-    train_on(path2label, verbose=True)
+    path2label = get_data('/home/user/Desktop/Malware_data')
+    train_on(path2label, verbose=False)

@@ -114,15 +114,17 @@ def count_seg_counts(dirpath, f_name, seg_set):
     return seg_counter
 
 
-def get_f2l_dict(filepath):
+def read_csv(filepath, key1, key2):  # TODO documentation
     """
     :param filepath: path to f2l-file (train_labels_filtered.csv) .
+    :param key1:
+    :param key2:
     :return: file-to-label dict.
     """
-    f2l_dict = dict()
+    k2v_dict = dict()
     csv_dict = DictReader(open(filepath))
     for row in csv_dict:
-        filename = row['Id']
-        label = row['Class']
-        f2l_dict[filename] = label
-    return f2l_dict
+        key = row[key1]
+        val = row[key2]
+        k2v_dict[key] = val
+    return k2v_dict

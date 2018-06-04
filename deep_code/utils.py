@@ -40,6 +40,9 @@ class ExeDataset(Dataset):
                 tmp.extend(line)
 
             # padding with zeroes such that all files will be of the same size
-            tmp = tmp + [0] * (self.first_n_byte - len(tmp))
+            if len(tmp) > self.first_n_byte:
+                tmp = tmp[:self.first_n_byte]
+            else:
+                tmp = tmp + [0] * (self.first_n_byte - len(tmp))
         f.close()
         return np.array(tmp), np.array([self.l2i[int(self.label_list[idx])]])

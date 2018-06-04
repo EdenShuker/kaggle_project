@@ -11,7 +11,7 @@ def get_segment_set_of(dirpath, train_set_path):
     :return: set of segments-names extracted from all the files in the given directory.
     """
     seg_set = set()
-    train_set = utils.get_f2l_dict(train_set_path).viewkeys()
+    train_set = utils.read_csv(train_set_path, 'Id', 'Class').viewkeys()
     # segments from .asm files
     ASM_END = utils.ASM_END
     asm_files = utils.get_files_from_dir(dirpath, '.' + ASM_END)  # get list of .asm files

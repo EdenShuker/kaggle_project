@@ -24,7 +24,7 @@ def get_data_and_labels(f2l_filepath, f2v_filepath):
     matrix, labels = [], []
 
     # create file-to-label dict
-    f2l_dict = utils.get_f2l_dict(f2l_filepath)
+    f2l_dict = utils.read_csv(f2l_filepath, 'Id', 'Class')
     with open(f2v_filepath, 'r') as f:
         for line in f:  # for each file find the vector that representing him
             filename, vec = line.split('\t')

@@ -5,14 +5,15 @@ import random
 from ml_code import utils
 
 
-def train_test_split(path_to_files, target_dir_path, test_size=0.33):
+def train_test_split(path_to_files, target_dir_path, test_size, l2dir_filepath):    # todo documentation
     """
     split given labeled data to train set and test set.
     :param path_to_files: path to csv file which holds list of all files.
     :param target_dir_path: path to dir where the files will be created in.
     :param test_size: (float) the relative size of the test set from data.
+    :param l2dir_filepath:
     """
-    files_to_labels = utils.get_f2l_dict(path_to_files)
+    files_to_labels = utils.read_csv(path_to_files, 'Id', 'Class')
     labels_to_files = get_labels_to_files(files_to_labels)
     train_set = {}
     test_set = {}
@@ -76,8 +77,8 @@ def get_labels_to_files(files_to_labels):
 
 if __name__ == '__main__':
     """
-    args:    csv_file_path target_dir_path split_percentage
-    example: data/train_labels_filtered.csv data 0.33
+    args:    csv_file_path target_dir_path split_percentage l2dir_file_path
+    example: data/train_labels_filtered.csv data 0.33 data/label2dir.csv
     """
-    train_test_split(sys.argv[1], sys.argv[2], float(sys.argv[3]))
+    train_test_split(sys.argv[1], sys.argv[2], float(sys.argv[3]), sys.argv[4])
     print 'done splitting the data'
