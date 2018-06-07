@@ -1,5 +1,6 @@
 import numpy as np
 from torch.utils.data import Dataset
+from torch import tensor
 
 
 class ExeDataset(Dataset):
@@ -45,4 +46,4 @@ class ExeDataset(Dataset):
             else:
                 tmp = tmp + [0] * (self.first_n_byte - len(tmp))
         f.close()
-        return np.array(tmp), np.array([self.l2i[int(self.label_list[idx])]])
+        return tensor(tmp), tensor(self.l2i[int(self.label_list[idx])])

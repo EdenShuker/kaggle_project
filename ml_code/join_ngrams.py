@@ -4,6 +4,8 @@ import pickle
 from collections import Counter
 from csv import DictReader
 
+num_classes = 4
+
 
 def count_ngrams_performances():
     """
@@ -12,15 +14,15 @@ def count_ngrams_performances():
     :return: dict_all
     """
     ngram_to_num_occurs = dict()
-    for c in range(1, 10):
+    for c in range(num_classes):
         # de-serialize counter from file.
         grams_counter = pickle.load(open('ml_code/ngrams/label_%i' % c, 'rb'))  # list of tuples (ngram, num)
         grams_counter = dict(grams_counter)
         for gram in grams_counter:
             if gram not in ngram_to_num_occurs:
                 # initialize an array: [0,0,0,0...]
-                ngram_to_num_occurs[gram] = [0] * 9
-            ngram_to_num_occurs[gram][c - 1] = grams_counter[gram]
+                ngram_to_num_occurs[gram] = [0] * num_classes
+            ngram_to_num_occurs[gram][c] = grams_counter[gram]
     return ngram_to_num_occurs
 
 
@@ -59,9 +61,9 @@ def get_best_gain_features(p, n, class_label, dict_all, num_features=750, gain_m
     heap = [(gain_minimum_bar, 'gain_bar')] * num_features
     root = heap[0]
     for gram, count_list in dict_all.iteritems():
-        p1 = count_list[class_label - 1]
+        p1 = count_list[class_label]
         # n1 - number of files with other labels with the n_gram.
-        n1 = sum(count_list[:(class_label - 1)] + count_list[class_label:])
+        n1 = sum(count_list[:(class_label)] + count_list[class_label+1:])
         p0, n0 = p - p1, n - n1
         if p1 * p0 * n1 * n0 != 0:
             gain = compute_gain(p0, n0, p1, n1, p, n)
@@ -76,7 +78,7 @@ def get_selected_features():
     counter_instances = num_instances('data/train_set.csv')
     num_all = sum(counter_instances.values())
     features_all = []
-    for label in range(1, 10):
+    for label in range(num_classes):
         p = counter_instances[label]
         n = num_all - p
         features_all += get_best_gain_features(p, n, label, dict_all)  # 750 * 9

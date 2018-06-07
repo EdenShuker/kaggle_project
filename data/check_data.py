@@ -47,8 +47,15 @@ def create_new_csv(l2f, f_list, add_labels_set=False):
 
 if __name__ == '__main__':
     label2files = csv_dict_to_new_dict()
-    path = 'train50'
+    labels = {'1':1, '9':2, '8':3}
+    with open('dshfkjhdskjf.csv', 'w') as f:
+        for label in labels:
+            ls = label2files[label]
+            for fname in ls:
+                f.write('/media/user/New Volume/train/{},{}\n'.format(fname, labels[label]))
 
-    ending = '.bytes'
-    malware_file_list = utils.get_files_from_dir(path, ending)
-    create_new_csv(label2files, malware_file_list)
+    # path = '/media/user/New Volume/train'
+    #
+    # ending = '.bytes'
+    # malware_file_list = utils.get_files_from_dir(path, ending)
+    # create_new_csv(label2files, malware_file_list)

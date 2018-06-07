@@ -14,14 +14,13 @@ DLL_END = 'dll'
 SEGMENT_END = 'segments'
 
 
-def get_ngrams_set_of(dir_path, f_name, n=4):
+def get_ngrams_set_of(f_name, n=4):
     """
-    :param dir_path: path to directory where the file is in.
     :param f_name: file name.
     :param n: num of grams to concat.
     :return: set of ngrams of the given file.
     """
-    path_to_file = "%s/%s.%s" % (dir_path, f_name, BYTES_END)
+    path_to_file = "%s.%s" % (f_name, BYTES_END)
     one_list = []
     with open(path_to_file, 'rb') as f:
         for line in f:
@@ -50,51 +49,52 @@ def get_files_from_dir(dirpath, ending):
     return files
 
 
-def produce_data_file_on_segments(dirpath, dll_filename):
+def produce_data_file_on_segments(dll_filename, dirpath='/media/user/New Volume/benign'):
     """
     Create a file that will provide information about the segments
         of the given file (name of segment and number of lines in it).
     The output file will have the same name as the input-file but instead, with '.segments' ending.
 
-    :param dirpath: path to directory where the file is in.
     :param dll_filename: name of dll file.
     """
+    file_name = dll_filename.rsplit('/', 1)[1]
     try:
-        pe = pefile.PE('%s/%s.%s' % (dirpath, dll_filename, DLL_END))
+        pe = pefile.PE('%s/%s.%s' % (dirpath, file_name, DLL_END))
     except Exception as e:
-        print 'Error with pefile on file: %s' % dll_filename
+        print 'Error with pefile on file: %s/%s.%s' % (dirpath, file_name, DLL_END)
         print e.message
         exit(0)
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    full_path = '%s/%s.%s' % ('ml_code/segments_data', file_name, SEGMENT_END)
+    if not isfile(full_path):
+        with open(full_path, 'w') as f:
+            for section in pe.sections:
+                code = section.get_data()
+                first_instruction_address = section.PointerToRawData
+                num_lines_in_section = 0
+                for i in md.disasm(code, first_instruction_address):
+                    num_lines_in_section += 1
+                # for each section write in the file the name and number of lines in that section
+                f.write('%s:%i\n' % (section.Name.strip('\0'), num_lines_in_section))
 
-    with open('%s/%s.%s' % (dirpath, dll_filename, SEGMENT_END), 'w') as f:
-        for section in pe.sections:
-            code = section.get_data()
-            first_instruction_address = section.PointerToRawData
-            num_lines_in_section = 0
-            for i in md.disasm(code, first_instruction_address):
-                num_lines_in_section += 1
-            # for each section write in the file the name and number of lines in that section
-            f.write('%s:%i\n' % (section.Name.strip('\0'), num_lines_in_section))
 
-
-def count_seg_counts(dirpath, f_name, seg_set):
+def count_seg_counts(f_name, seg_set, dirpath='ml_code/segments_data'):
     """
-    :param dirpath: name of directory the file is in.
     :param f_name: name of file.
     :param seg_set: set of segments-names.
     :return: dict that maps segment-name to number of lines in that segment in the given file.
     """
+    name = f_name.rsplit('/', 1)[1]
     seg_counter = Counter()
     num_unks = 0  # number of unknown segments
 
-    filepath_without_ending = '%s/%s.' % (dirpath, f_name)
+    filepath_without_ending = '%s.' % (f_name)
     path_to_file = filepath_without_ending + ASM_END
     if isfile(path_to_file):  # can use .asm file
         mode = ASM_END
     else:  # has no .asm file, so parse the dll file and extract info about segments
-        produce_data_file_on_segments(dirpath, f_name)
-        path_to_file = filepath_without_ending + SEGMENT_END
+        produce_data_file_on_segments(f_name)
+        path_to_file = dirpath + '/' + name + '.' + SEGMENT_END
         mode = SEGMENT_END
 
     with open(path_to_file, 'rb') as f:
