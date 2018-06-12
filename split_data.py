@@ -5,7 +5,7 @@ import random
 from ml_code import utils
 
 
-def train_test_split(path_to_files, target_dir_path, test_size):    # todo documentation
+def train_test_split(path_to_files, target_dir_path, test_size):
     """
     split given labeled data to train set and test set.
     :param path_to_files: path to csv file which holds list of all files.

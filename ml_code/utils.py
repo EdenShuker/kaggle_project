@@ -49,13 +49,16 @@ def get_files_from_dir(dirpath, ending):
     return files
 
 
-def produce_data_file_on_segments(dll_filename, dirpath='/media/user/New Volume/benign'):
+def produce_data_file_on_segments(dll_filename,
+                                  dirpath='/home/tamir/PycharmProjects/kaggle_project_new/data/benign'):
+    # TODO doc
     """
     Create a file that will provide information about the segments
         of the given file (name of segment and number of lines in it).
     The output file will have the same name as the input-file but instead, with '.segments' ending.
 
     :param dll_filename: name of dll file.
+    :param dirpath:
     """
     file_name = dll_filename.rsplit('/', 1)[1]
     try:
@@ -68,6 +71,7 @@ def produce_data_file_on_segments(dll_filename, dirpath='/media/user/New Volume/
     full_path = '%s/%s.%s' % ('ml_code/segments_data', file_name, SEGMENT_END)
     if not isfile(full_path):
         with open(full_path, 'w') as f:
+            print 'len', len(pe.sections), full_path
             for section in pe.sections:
                 code = section.get_data()
                 first_instruction_address = section.PointerToRawData
@@ -78,10 +82,11 @@ def produce_data_file_on_segments(dll_filename, dirpath='/media/user/New Volume/
                 f.write('%s:%i\n' % (section.Name.strip('\0'), num_lines_in_section))
 
 
-def count_seg_counts(f_name, seg_set, dirpath='ml_code/segments_data'):
+def count_seg_counts(f_name, seg_set, dirpath='ml_code/segments_data'): # todo documentation
     """
     :param f_name: name of file.
     :param seg_set: set of segments-names.
+    :param dirpath:
     :return: dict that maps segment-name to number of lines in that segment in the given file.
     """
     name = f_name.rsplit('/', 1)[1]

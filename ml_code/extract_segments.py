@@ -25,12 +25,14 @@ def get_segment_set_of(dirpath, train_set_path):
 
     # segments from .dll files
     DLL_END = utils.DLL_END
+    # TODO in ASAFIS the dll_files list is empty because the .bytes and .dll files are in different dirs,
+    # TODO thus the dirpath here is of the .bytes dir but needed .dll dirpath
     dll_files = utils.get_files_from_dir(dirpath, '.' + DLL_END)  # get list of .dll files
     for dll_f in dll_files:
         full_path = dirpath + '/' + dll_f
         if full_path in train_set:
             try:
-                pe = pefile.PE('%s.%s' % (dll_f, DLL_END))
+                pe = pefile.PE('%s.%s' % (full_path, DLL_END))
             except Exception as e:
                 print 'Error with pefile on file: %s' % dll_f
                 print e.message
@@ -44,8 +46,8 @@ if __name__ == '__main__':
     t0 = time()
 
     # TODO add the opportunity to pass this path as args to main
-    segments1 = get_segment_set_of('/media/user/New Volume/train', 'data/train_set.csv')
-    segments2 = get_segment_set_of('/media/user/New Volume/benign', 'data/train_set.csv')
+    segments1 = get_segment_set_of('/home/tamir/PycharmProjects/kaggle_project_new/data/benign', 'data/train_set.csv')
+    segments2 = get_segment_set_of('/home/tamir/PycharmProjects/kaggle_project_new/data/malware', 'data/train_set.csv')
     segments1.update(segments2)
     segments1.add(utils.UNK)
     print segments1

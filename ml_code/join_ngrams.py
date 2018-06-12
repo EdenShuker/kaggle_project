@@ -4,7 +4,7 @@ import pickle
 from collections import Counter
 from csv import DictReader
 
-num_classes = 4
+num_classes = 2
 
 
 def count_ngrams_performances():

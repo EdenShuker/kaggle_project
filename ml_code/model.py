@@ -59,6 +59,7 @@ class CodeModel(object):
     def __init__(self, lr=0.1, n_estimators=30, max_depth=5, min_child_weight=1,
                  gamma=0, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=1, seed=27):
         # TODO need to tune the parameters
+        # objective='multi:softprob'
         self.model = xgb.XGBClassifier(learning_rate=lr,
                                        n_estimators=n_estimators,
                                        max_depth=max_depth,
@@ -67,8 +68,10 @@ class CodeModel(object):
                                        subsample=subsample,
                                        colsample_bytree=colsample_bytree,
                                        scale_pos_weight=scale_pos_weight,
-                                       objective='multi:softprob',
+                                       objective='binary:logistic',
                                        seed=seed)
+        # xgb_params = self.model.get_xgb_params()
+        # xgb_params['num_class'] = 2
 
     def predict_on(self, matrix):
         """
